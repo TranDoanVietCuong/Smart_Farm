@@ -3,22 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agrinova AI Dashboard</title>
+    <title>Tomato AIoT Farm - Lloydz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        .markdown-body h3 { font-size: 1.125rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; color: #1f2937; }
+        .markdown-body strong { font-weight: bold; color: #111827; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+        .markdown-body p { margin-bottom: 0.5rem; line-height: 1.5; }
+    </style>
 </head>
-<body class="bg-slate-100 p-8 font-sans">
-    <div class="max-w-5xl mx-auto space-y-6">
+<body class="bg-slate-100 p-6 md:p-8 font-sans text-gray-800">
+    <div class="max-w-7xl mx-auto space-y-6">
         
-        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Agrinova AI Control Center</h1>
-            <div class="flex items-center gap-2 mt-4 p-3 bg-green-50 rounded-lg text-green-800">
-                <span class="text-2xl">🧠</span>
-                <div>
-                    <p class="text-sm font-semibold uppercase tracking-wide">Nhận định từ AI</p>
-                    <p class="text-lg font-medium" id="ai_scenario">Đang chờ dữ liệu...</p>
-                    <p class="text-sm mt-1" id="ai_water">Lượng nước dự kiến: -- ml</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex flex-col justify-center">
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">🌱 Tomato Master AIoT</h1>
+                <div class="flex items-center gap-3 mt-2 p-3 bg-green-50 rounded-lg text-green-800 border border-green-100">
+                    <span class="text-3xl">🤖</span>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide opacity-80">PPO Agent + OWM Guardrails</p>
+                        <p class="text-lg font-medium" id="ai_scenario">Đang đồng bộ dữ liệu Edge...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex flex-col justify-center">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">💧 Dự báo tưới tiêu 24h</h2>
+                <div class="flex items-center gap-3 mt-2 p-3 bg-blue-50 rounded-lg text-blue-800 border border-blue-100">
+                    <span class="text-3xl">⏱️</span>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide opacity-80">Mô hình Hồi quy LSTM</p>
+                        <p class="text-base font-medium mt-1" id="ai_forecast">Đang phân tích log SQLite...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -26,7 +46,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl text-center shadow-sm border border-gray-100">
                 <p class="text-gray-500 text-sm font-bold uppercase">Độ Ẩm Đất</p>
-                <p class="text-3xl font-black text-blue-500 mt-2" id="soil_moist">-- %</p>
+                <p class="text-3xl font-black text-blue-600 mt-2" id="soil_moist">-- %</p>
             </div>
             <div class="bg-white p-4 rounded-xl text-center shadow-sm border border-gray-100">
                 <p class="text-gray-500 text-sm font-bold uppercase">Nhiệt Độ</p>
@@ -43,74 +63,200 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-                <h2 class="text-xl font-bold text-gray-700 mb-4">Biểu Đồ Môi Trường (Real-time)</h2>
-                <canvas id="sensorChart" height="120"></canvas>
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">📈 Biểu Đồ Chuỗi Thời Gian (Real-time)</h2>
+                    <canvas id="sensorChart" height="100"></canvas>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500 flex flex-col h-full">
+                    <h2 class="text-xl font-bold text-gray-700 mb-3">📸 AI Nhận Diện Bệnh (YOLOv11 + RAG)</h2>
+                    <div class="flex flex-col md:flex-row gap-3 items-center">
+                        <input type="file" id="imageInput" accept="image/*" class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer border border-gray-200 rounded">
+                        <button onclick="analyzeImage()" class="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded shadow transition">Khám Bệnh 🔍</button>
+                    </div>
+                    <div id="ai_image_result" class="markdown-body mt-4 text-sm text-gray-800 bg-purple-50 p-5 rounded-lg border border-purple-100 min-h-[150px] overflow-auto">
+                        Hãy tải lên ảnh chiếc lá để YOLOv11 quét bệnh và RAG tư vấn phác đồ điều trị chi tiết.
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md flex flex-col gap-4">
-                <h2 class="text-xl font-bold text-gray-700 mb-2">Tương Tác Thủ Công</h2>
-                <button onclick="sendCommand('PUMP_ON')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
-                    💦 Bật Bơm Nước
-                </button>
-                <button onclick="sendCommand('PUMP_OFF')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
-                    🚫 Ngắt Bơm
-                </button>
-                <button onclick="sendCommand('NET_CLOSE')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
-                    ☀️ Kéo Lưới Che Nắng
-                </button>
-                <button onclick="sendCommand('NET_OPEN')" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
-                    🌤️ Thu Lưới Vào
-                </button>
+            <div class="flex flex-col gap-6">
+                
+                <div class="bg-white p-6 rounded-xl shadow-md flex flex-col gap-3">
+                    <h2 class="text-xl font-bold text-gray-700 mb-2">⚙️ Trạng Thái & Điều Khiển</h2>
+                    
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border mb-2">
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-bold text-gray-500 uppercase">💦 Bơm</span>
+                            <span id="status_pump" class="px-2 py-1 mt-1 rounded text-xs font-bold bg-gray-300 text-gray-700">CHỜ ĐỒNG BỘ</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-bold text-gray-500 uppercase">🌀 Quạt</span>
+                            <span id="status_fan" class="px-2 py-1 mt-1 rounded text-xs font-bold bg-gray-300 text-gray-700">CHỜ ĐỒNG BỘ</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-bold text-gray-500 uppercase">💡 Đèn</span>
+                            <span id="status_light" class="px-2 py-1 mt-1 rounded text-xs font-bold bg-gray-300 text-gray-700">CHỜ ĐỒNG BỘ</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="sendCommand('PUMP_ON')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded shadow">💦 Bật Bơm</button>
+                        <button onclick="sendCommand('PUMP_OFF')" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded shadow">🚫 Tắt Bơm</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="sendCommand('FAN_ON')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 rounded shadow">🌀 Bật Quạt</button>
+                        <button onclick="sendCommand('FAN_OFF')" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded shadow">🚫 Tắt Quạt</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="sendCommand('LIGHT_ON')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded shadow">💡 Bật Đèn</button>
+                        <button onclick="sendCommand('LIGHT_OFF')" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded shadow">🚫 Tắt Đèn</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md flex-1 flex flex-col h-[400px]">
+                    <h2 class="text-xl font-bold text-gray-700 mb-3">💬 Trợ lý Cà chua (RAG Qdrant)</h2>
+                    <div id="chat-box" class="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-lg border mb-3 text-sm flex flex-col gap-3 shadow-inner">
+                        <div class="bg-green-100 p-3 rounded-lg self-start max-w-[90%] shadow-sm">
+                            Chào Lloydz! Knowledge Base đã sẵn sàng. Cậu cần tra cứu gì nào?
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-auto pt-2">
+                        <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition" placeholder="Hỏi RAG AI...">
+                        <button onclick="sendChatMessage()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded text-sm font-bold shadow transition">Gửi</button>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 
     <script>
         const socket = io();
 
+        // 1. Khởi tạo Biểu đồ (CÓ ÁNH SÁNG MÀU VÀNG)
         const ctx = document.getElementById('sensorChart').getContext('2d');
         const sensorChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [], 
                 datasets: [
-                    { label: 'Độ ẩm đất (%)', borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', data: [], tension: 0.4, fill: true },
-                    { label: 'Nhiệt độ (°C)', borderColor: 'rgb(239, 68, 68)', backgroundColor: 'transparent', data: [], tension: 0.4 }
+                    { label: 'Độ ẩm đất (%)', borderColor: 'rgb(37, 99, 235)', backgroundColor: 'rgba(37, 99, 235, 0.1)', data: [], tension: 0.4, fill: true },
+                    { label: 'Nhiệt độ (°C)', borderColor: 'rgb(239, 68, 68)', backgroundColor: 'transparent', data: [], tension: 0.4 },
+                    { label: 'Ánh sáng (%)', borderColor: 'rgb(234, 179, 8)', backgroundColor: 'transparent', data: [], tension: 0.4 }
                 ]
             },
             options: { responsive: true, animation: false, scales: { y: { beginAtZero: true, max: 100 } } }
         });
 
+        // HÀM CẬP NHẬT GIAO DIỆN TRẠNG THÁI THIẾT BỊ
+        function updateDeviceBadge(elementId, statusValue) {
+            const el = document.getElementById(elementId);
+            if (statusValue === 1) {
+                el.innerText = 'ĐANG BẬT';
+                el.className = 'px-2 py-1 mt-1 rounded text-xs font-bold bg-green-100 text-green-700';
+            } else if (statusValue === 0) {
+                el.innerText = 'ĐÃ TẮT';
+                el.className = 'px-2 py-1 mt-1 rounded text-xs font-bold bg-red-100 text-red-700';
+            }
+        }
+
+        // 2. Lắng nghe dữ liệu WebSocket
         socket.on('update_dashboard', function(data) {
+            // Cập nhật giá trị cảm biến và biểu đồ
             if (data.sensors) {
                 document.getElementById('soil_moist').innerText = data.sensors.do_am_dat + ' %';
                 document.getElementById('temp').innerText = data.sensors.nhiet_do + ' °C';
                 document.getElementById('air_hum').innerText = data.sensors.do_am_kk + ' %';
                 document.getElementById('light').innerText = data.sensors.anh_sang;
 
+                let lightVal = data.sensors.anh_sang;
+                if(typeof lightVal === 'string') lightVal = parseFloat(lightVal.replace('%', ''));
+
                 const now = new Date().toLocaleTimeString();
                 sensorChart.data.labels.push(now);
                 sensorChart.data.datasets[0].data.push(data.sensors.do_am_dat);
                 sensorChart.data.datasets[1].data.push(data.sensors.nhiet_do);
+                sensorChart.data.datasets[2].data.push(lightVal || 0);
 
                 if(sensorChart.data.labels.length > 20) {
                     sensorChart.data.labels.shift();
                     sensorChart.data.datasets[0].data.shift();
                     sensorChart.data.datasets[1].data.shift();
+                    sensorChart.data.datasets[2].data.shift();
                 }
                 sensorChart.update();
             }
+
+            // Cập nhật text nhận định AI
             if (data.ai_status) {
                 document.getElementById('ai_scenario').innerText = data.ai_status.scenario;
-                document.getElementById('ai_water').innerText = `Lượng nước dự kiến bơm: ${data.ai_status.predicted_water} ml`;
+                if(data.ai_status.forecast) {
+                    document.getElementById('ai_forecast').innerText = data.ai_status.forecast;
+                }
+            }
+
+            // Cập nhật thanh trạng thái thiết bị (MỚI)
+            if (data.device_state) {
+                updateDeviceBadge('status_pump', data.device_state.pump);
+                updateDeviceBadge('status_fan', data.device_state.fan);
+                updateDeviceBadge('status_light', data.device_state.light);
             }
         });
 
+        // 3. Điều khiển thủ công
         function sendCommand(actionType) {
             fetch('/api/control', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: actionType }) })
-            .then(res => res.json()).then(data => alert(data.message)).catch(err => console.error(err));
+            .catch(err => console.error(err));
+            // Không cần alert, giao diện tự động update màu badge!
         }
+
+        // 4. Khám bệnh bằng YOLOv11 + RAG
+        function analyzeImage() {
+            const input = document.getElementById('imageInput');
+            if (input.files.length === 0) { alert("Lloydz quên chọn ảnh rồi kìa!"); return; }
+
+            const resultBox = document.getElementById('ai_image_result');
+            resultBox.innerHTML = "<span class='animate-pulse font-bold text-purple-600'>⏳ YOLOv11 đang quét & RAG đang truy xuất phác đồ...</span>";
+
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+
+            fetch('/api/analyze-image', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    resultBox.innerHTML = marked.parse(data.result);
+                } else {
+                    resultBox.innerText = "Lỗi khi phân tích ảnh.";
+                }
+            }).catch(err => resultBox.innerText = "Lỗi kết nối tới AI Server.");
+        }
+
+        // 5. Chatbot RAG
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div class="bg-blue-100 p-3 rounded-lg self-end max-w-[90%] break-words shadow-sm font-medium text-blue-900">${msg}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) })
+            .then(res => res.json())
+            .then(data => {
+                const htmlResponse = marked.parse(data.response);
+                chatBox.innerHTML += `<div class="markdown-body bg-green-100 p-4 rounded-lg self-start max-w-[95%] break-words shadow-sm border border-green-200">${htmlResponse}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        document.getElementById("chat-input").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") { e.preventDefault(); sendChatMessage(); }
+        });
     </script>
 </body>
 </html>
