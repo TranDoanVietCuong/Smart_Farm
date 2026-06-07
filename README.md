@@ -6,7 +6,7 @@ Hệ thống Nông nghiệp Thông minh tích hợp AI & IoT chuyên biệt cho 
 
 ## 🌟 Tính năng nổi bật
 
-* **Chẩn đoán bệnh thực thời (Vision AI):** Sử dụng **YOLOv11** để nhận diện 11 loại bệnh phổ biến trên lá cà chua với tốc độ xử lý nhanh và độ chính xác cao.
+* **Chẩn đoán bệnh thực thời (Vision AI):** Sử dụng **YOLOv11** để nhận diện 11 loại bệnh phổ biến trên lá cà chua với tốc độ xử lý nhanh và độ chính xác ổn định.
 * **Trợ lý nông nghiệp chuyên sâu (RAG):** Kết hợp **Vietnamese-SBERT** và **Qdrant Vector Database** để xây dựng Chatbot RAG. Hệ thống tự động truy xuất phác đồ điều trị, nguyên nhân và cách phòng ngừa từ cẩm nang kỹ thuật nông nghiệp.
 * **Điều khiển AI lai (Hybrid PPO Agent):** Sử dụng thuật toán **PPO (Proximal Policy Optimization)** để ra quyết định điều khiển phần cứng. Hệ thống được bảo vệ bởi **Guardrails** (luật cứng dựa trên dữ liệu thời tiết API) để đảm bảo an toàn vận hành.
 * **Dự báo tưới tiêu (Time-series Forecasting):** Mô hình **LSTM** kết hợp với cơ sở dữ liệu **SQLite** để tính toán và dự báo tốc độ mất nước của đất trong 24 giờ tới.
