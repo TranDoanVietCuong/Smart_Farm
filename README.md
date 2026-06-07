@@ -1,4 +1,4 @@
-# 🍅 Tomato Master AIoT Farm
+# 🍅 Tomato Farm
 
 Hệ thống Nông nghiệp Thông minh tích hợp AI & IoT chuyên biệt cho cây cà chua. Dự án là sự kết hợp giữa Deep Learning, Học tăng cường (Reinforcement Learning) và Hệ thống chuyên gia để tự động hóa và tối ưu hóa quy trình canh tác.
 
